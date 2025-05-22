@@ -1,49 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>URL Shortener</title>
+  <meta charset="UTF-8" />
+  <title>Create Short URL</title>
 </head>
 <body>
-  <h1>🔗 URL Shortener</h1>
-  <input id="longUrl" placeholder="Enter long URL" size="50">
-  <button onclick="shortenUrl()">Shorten</button>
-  <p id="output"></p>
-  <hr>
-  <h2>📊 Shortened URLs & Clicks</h2>
-  <ul id="url-list"></ul>
+  <h1>Create Short URL</h1>
+  <form id="create-form">
+    <input type="text" id="shortCode" placeholder="Enter short code" required />
+    <input type="url" id="longUrl" placeholder="Enter long URL" required />
+    <button type="submit">Create</button>
+  </form>
+
+  <div id="message"></div>
+  <div id="result" style="margin-top: 20px;"></div>
+
+  <p><a href="/dashboard">Go to Dashboard</a></p>
 
   <script>
-    async function fetchURLs() {
-      const res = await fetch('/urls');
-      const data = await res.json();
-      const list = document.getElementById('url-list');
-      list.innerHTML = '';
+    const form = document.getElementById('create-form');
+    const message = document.getElementById('message');
+    const result = document.getElementById('result');
 
-      for (const code in data) {
-        const item = document.createElement('li');
-        item.innerHTML = `
-          <a href="/${code}" target="_blank">/${code}</a> → 
-          ${data[code].longUrl} 
-          (Clicks: ${data[code].clicks})
-        `;
-        list.appendChild(item);
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      message.textContent = '';
+      result.textContent = '';
+
+      const shortCode = document.getElementById('shortCode').value.trim();
+      const longUrl = document.getElementById('longUrl').value.trim();
+
+      if (!shortCode || !longUrl) {
+        message.textContent = 'Both fields are required.';
+        return;
       }
-    }
 
-    async function shortenUrl() {
-      const longUrl = document.getElementById('longUrl').value;
-      const response = await fetch('/shorten', {
+      const res = await fetch('/urls', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ longUrl })
+        body: JSON.stringify({ shortCode, longUrl }),
       });
 
-      const data = await response.json();
-      document.getElementById('output').innerHTML = `<a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a>`;
-      fetchURLs(); // Refresh list
-    }
+      const data = await res.json();
 
-    fetchURLs(); // Initial fetch
+      if (res.ok) {
+        message.textContent = 'Short URL created successfully!';
+        // Show clickable short URL link
+        const baseUrl = window.location.origin;
+        const shortUrl = `${baseUrl}/${shortCode}`;
+        result.innerHTML = `Your short URL is: <a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
+        form.reset();
+      } else {
+        message.textContent = `Error: ${data.error}`;
+      }
+    });
   </script>
 </body>
 </html>

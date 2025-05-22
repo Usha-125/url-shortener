@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard</title>
+</head>
+<body>
+  <h1>URL Dashboard</h1>
+
+  <ul id="url-list"></ul>
+
+  <p><a href="/">Back to Create Short URL</a></p>
+
+  <script>
+    async function fetchUrls() {
+      const res = await fetch('/urls');
+      const data = await res.json();
+      const list = document.getElementById('url-list');
+      list.innerHTML = '';
+
+      for (const shortCode in data) {
+        const urlData = data[shortCode];
+        const li = document.createElement('li');
+        li.textContent = `${shortCode} → ${urlData.longUrl} (Clicks: ${urlData.clicks}) `;
+
+        // Delete button
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = async () => {
+          if (!confirm(`Delete short URL "${shortCode}"?`)) return;
+          const res = await fetch(`/urls/${shortCode}`, { method: 'DELETE' });
+          if (res.ok) {
+            alert('Deleted successfully!');
+            fetchUrls();
+          } else {
+            alert('Failed to delete');
+          }
+        };
+
+        // Edit button
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = async () => {
+          const newLongUrl = prompt('Enter new long URL:', urlData.longUrl);
+          if (!newLongUrl) {
+            alert('Long URL is required!');
+            return;
+          }
+          const newCode = prompt('Enter new short code (leave blank to keep current):', shortCode);
+
+          const res = await fetch(`/urls/${shortCode}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newCode: newCode || shortCode, newLongUrl }),
+          });
+
+          const json = await res.json();
+          if (res.ok) {
+            alert('Updated successfully!');
+            fetchUrls();
+          } else {
+            alert('Error: ' + json.error);
+          }
+        };
+
+        li.appendChild(delBtn);
+        li.appendChild(editBtn);
+        list.appendChild(li);
+      }
+    }
+
+    fetchUrls();
+  </script>
+</body>
+</html>
