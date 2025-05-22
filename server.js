@@ -56,6 +56,10 @@ app.get('/:shortCode', (req, res) => {
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views/index.html'));
 });
+// Endpoint to get all URLs with click counts
+app.get('/urls', (req, res) => {
+  res.json(urlDatabase);
+});
 
 // Start server
 app.listen(PORT, () => {

@@ -8,8 +8,28 @@
   <input id="longUrl" placeholder="Enter long URL" size="50">
   <button onclick="shortenUrl()">Shorten</button>
   <p id="output"></p>
+  <hr>
+  <h2>📊 Shortened URLs & Clicks</h2>
+  <ul id="url-list"></ul>
 
   <script>
+    async function fetchURLs() {
+      const res = await fetch('/urls');
+      const data = await res.json();
+      const list = document.getElementById('url-list');
+      list.innerHTML = '';
+
+      for (const code in data) {
+        const item = document.createElement('li');
+        item.innerHTML = `
+          <a href="/${code}" target="_blank">/${code}</a> → 
+          ${data[code].longUrl} 
+          (Clicks: ${data[code].clicks})
+        `;
+        list.appendChild(item);
+      }
+    }
+
     async function shortenUrl() {
       const longUrl = document.getElementById('longUrl').value;
       const response = await fetch('/shorten', {
@@ -20,7 +40,10 @@
 
       const data = await response.json();
       document.getElementById('output').innerHTML = `<a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a>`;
+      fetchURLs(); // Refresh list
     }
+
+    fetchURLs(); // Initial fetch
   </script>
 </body>
 </html>
